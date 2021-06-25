@@ -1,0 +1,45 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+Node	settings.py	/^class Node:$/;"	c
+Road	settings.py	/^class Road:$/;"	c
+Vehicle	settings.py	/^class Vehicle:$/;"	c
+View	main.py	/^class View:$/;"	c
+__init__	main.py	/^    def __init__(self, root):$/;"	m	class:View
+__init__	settings.py	/^    def __init__(self, canvas, x, y):$/;"	m	class:Vehicle
+__init__	settings.py	/^    def __init__(self, start, end):$/;"	m	class:Road
+__init__	settings.py	/^    def __init__(self, x, y):$/;"	m	class:Node
+_init_sprite	settings.py	/^    def _init_sprite(self, canvas):$/;"	m	class:Vehicle
+animation_ball_min_movement	settings.py	/^animation_ball_min_movement = 5$/;"	v
+animation_ball_radius	settings.py	/^animation_ball_radius = 30$/;"	v
+animation_refresh_milliseconds	settings.py	/^animation_refresh_milliseconds = 10$/;"	v
+animation_window_height	settings.py	/^animation_window_height=800$/;"	v
+animation_window_width	settings.py	/^animation_window_width=800$/;"	v
+config_canvas	settings.py	/^def config_canvas(canvas):$/;"	f
+config_window	settings.py	/^def config_window(window):$/;"	f
+convert_to_window	settings.py	/^def convert_to_window(x, y):$/;"	f
+enter	settings.py	/^    def enter(self, s):$/;"	m	class:Road
+exit	settings.py	/^    def exit(self):$/;"	m	class:Road
+go	settings.py	/^    def go(self):$/;"	m	class:Vehicle
+logger	settings.py	/^def logger(message):$/;"	f
+navigate	settings.py	/^    def navigate(self):$/;"	m	class:Road
+neighbors	settings.py	/^    def neighbors(self):$/;"	m	class:Road
+prepare_model	settings.py	/^def prepare_model(canvas):$/;"	f
+redraw	settings.py	/^    def redraw(self):$/;"	m	class:Vehicle
+rule	settings.py	/^    def rule(self):$/;"	m	class:Vehicle
+run	main.py	/^    def run(self):$/;"	m	class:View
+settings	main.py	/^import settings$/;"	i
+sh	settings.py	/^sh = animation_window_height\/world_height_m$/;"	v
+sw	settings.py	/^sw = animation_window_width\/world_width_m$/;"	v
+th	settings.py	/^th = 0.5*animation_window_height$/;"	v
+tk	main.py	/^tk = tkinter.Tk()$/;"	v
+tkinter	main.py	/^import tkinter$/;"	i
+total_ticks	settings.py	/^total_ticks = 50 # 3600 = 1 hour$/;"	v
+tw	settings.py	/^tw = 0.5*animation_window_width$/;"	v
+vehicle_size_px	settings.py	/^vehicle_size_px = 6$/;"	v
+widget	main.py	/^widget = View(tk)$/;"	v
+world_height_m	settings.py	/^world_height_m = 1600$/;"	v
+world_width_m	settings.py	/^world_width_m = 1600$/;"	v
