@@ -6,7 +6,7 @@ animation_window_width=800
 animation_window_height=800
 animation_ball_radius = 30
 animation_ball_min_movement = 5
-animation_refresh_milliseconds = 10
+animation_refresh_milliseconds = 100
 
 # world_width_m = 200000
 # world_height_m = 200000
@@ -23,7 +23,7 @@ total_ticks = 50 # 3600 = 1 hour
 
 def convert_to_window(x, y):
     w = int(x*sw + tw)
-    h = int(y*sh + th)
+    h = int(-y*sh + th)
     return w, h
 
 def logger(message):
@@ -35,6 +35,10 @@ def prepare_model(canvas):
     v2 = Vehicle(canvas,50,50)
     res.append(v1)
     res.append(v2)
+    # add node and road, and connect them with v1 v2
+    n1 = Node(canvas, 0, 0)
+    n2 = Node(canvas, 200,200)
+    # tr = Road(canvas, n1, n2)
     return res
 
 def config_window(window):
@@ -84,13 +88,10 @@ class Vehicle:
                 self.h + vehicle_size_px)
 
     def rule(self):
-        if self.x < - world_width_m/2 + 1  or self.x > world_width_m/2 - 1:
-            self.delta_x = - self.delta_x
-        if self.y < - world_height_m/2 + 1 or self.y > world_height_m/2 - 1:
-            self.delta_y = - self.delta_y
+        pass
 
 class Road:
-    def __init__(self, start, end):
+    def __init__(self, canvas, start, end):
         self.x1 = start.x
         self.y1 = start.y
         self.x2 = end.x
@@ -98,6 +99,10 @@ class Road:
         self.l = ((self.x1 - self.x2)**2 + (self.y1 - self.y2)**2)**0.5
         self.v_max = 25
         self.vehicle_queue = None
+        self.sprite = None
+
+    def _init_sprite(self, canvas):
+        pass
 
     def enter(self, s):
         pass
@@ -115,11 +120,23 @@ class Road:
         # return dx, dy
 
 class Node:
-    def __init__(self, x, y):
+    def __init__(self, canvas, x, y):
         self.x = x
         self.y = y
-        self.inflow = set()
-        self.outflow = set()
+        self.inflow = []
+        self.outflow = []
+        self.node_width_px = 6
+        self.node_height_px = 15
+        self.sprite = self._init_sprite(canvas)
+
+    def _init_sprite(self, canvas):
+        self.w, self.h = convert_to_window(self.x, self.y)
+        res = canvas.create_rectangle(self.w,
+            self.h - self.node_height_px,
+            self.w + self.node_width_px,
+            self.h + self.node_height_px,
+            fill="green")
+        return res
 
 
 
