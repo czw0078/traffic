@@ -20,10 +20,10 @@ th = 0.5*animation_window_height
 sw = animation_window_width/world_width_m
 sh = animation_window_height/world_height_m
 
-total_ticks = 20 # 3600 = 1 hour
+total_ticks = 30 # 3600 = 1 hour
 time_interval = 1 # 1 second per tick
 
-route_list = [None]
+route_table = [None]
 
 def convert_to_window(x, y):
     w = int(x*sw + tw)
@@ -42,10 +42,14 @@ def prepare_model(canvas):
     tr2 = Road(canvas, n1, n2, 1) # second lane
     o3 = Node(canvas, -50, 50)
     r1 = Road(canvas, o3, n1, 0)
+    # add a route table, OD to route lists
+    route_table[0] = [r1, tr2]
     #
     # tr1.add_vechle
     v1 = Vehicle(canvas,-50,50)
-    v1.road = r1
+    v1.route_index = 0
+    v1.road = route_table[v1.route_index][0]
+    #v1.road.vehicle_queue.appendleft(v1)
     if len(r1.vehicle_queue) > 0:
         v1.front_vehicle = r1.vehicle_queue[0]
     else:
@@ -55,11 +59,10 @@ def prepare_model(canvas):
     #
     v2 = Vehicle(canvas,50,50)
     v2.road = tr2
+    tr2.vehicle_queue.appendleft(v2)
     # 
     res.append(v1)
     res.append(v2)
-    # add a route table
-    route_list[0] = [r1, tr2]
     return res
 
 def config_window(window):
@@ -69,6 +72,30 @@ def config_window(window):
 def config_canvas(canvas):
     canvas.configure(bg="black")
     canvas.pack(fill="both", expand=True)
+
+class Direction:
+    def __init__(self, route_list):
+        self.x = None
+        self.y = None
+        self.segment_index = 0
+        self.road = None
+
+    def refresh_with_distance(self, s):
+        # change the x, y value
+        # return nothing
+        pass
+
+class Display:
+    def __init__(self, canvas):
+        self.w = 0
+        self.h = 0
+        self.canvas = canvas
+        self.sprite = None
+
+    def refresh_with_direction(self, direction):
+        # change the w and h
+        # return nothing
+        pass
 
 class Vehicle:
 
@@ -85,9 +112,10 @@ class Vehicle:
         self.a = 0
         self.v = 3 # 7 ?
         self.s = 0
+        # TODO set up direction and screen class
         self.front_vehicle = None
-        # route ?
-        self.route_table = None # 0,0
+        self.route_index = None
+        self.segment_index = 0
         self.road = None
 
     def _init_sprite(self, canvas):
@@ -102,7 +130,18 @@ class Vehicle:
         return res
 
     def rule(self):
-        pass
+        is_queue_head = self.road.vehicle_queue[-1] == self
+        is_passed = self.s > self.road.l
+        if is_queue_head and is_passed:
+            self.s = self.s - self.road.l
+            self.road.vehicle_queue.pop()
+            self.segment_index += 1
+            self.road = route_table[self.route_index][self.segment_index]
+            if len(self.road.vehicle_queue) > 0:
+                self.front_vehicle = self.road.vehicle_queue[0]
+            else:
+                self.front_vehicle = None
+            self.road.vehicle_queue.appendleft(self)
 
     def go(self):
         self.v = self.v + self.a*time_interval
