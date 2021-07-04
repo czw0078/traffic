@@ -47,8 +47,6 @@ def prepare_model(canvas):
     #
     # tr1.add_vechle
     v1 = Vehicle(canvas,-50,50)
-    v1.route_index = 0
-    v1.road = route_table[v1.route_index][0]
     #v1.road.vehicle_queue.appendleft(v1)
     if len(r1.vehicle_queue) > 0:
         v1.front_vehicle = r1.vehicle_queue[0]
@@ -68,34 +66,48 @@ def prepare_model(canvas):
 def config_window(window):
     window.title("Traffic Demo")
     window.geometry(str(animation_window_width)+'x'+str(animation_window_height))
+    window.attributes("-topmost", True)
 
 def config_canvas(canvas):
     canvas.configure(bg="black")
     canvas.pack(fill="both", expand=True)
 
 class Direction:
-    def __init__(self, route_list):
-        self.x = None
-        self.y = None
+    def __init__(self, route_list, current_vehicle):
+        self.vehicle = current_vehicle
         self.segment_index = 0
-        self.road = None
+        self.road = route_list[self.segment_index]
+        self.front_vehicle = self.new_front_vehicle() #TODO
+        self.x, self.y = self.road.drive_along(current_vehicle.s)
 
-    def refresh_with_distance(self, s):
-        # change the x, y value
-        # return nothing
-        pass
+    def new_front_vehicle(self):
+        if len(self.road.vehicle_queue)>0:
+            return self.road.vehicle_queue[0]
+        else:
+            return None
 
-class Display:
-    def __init__(self, canvas):
-        self.w = 0
-        self.h = 0
-        self.canvas = canvas
-        self.sprite = None
+    def enter_road(self):
+            self.front_vehicle = new_front_vehicle()
+            self.road.vehicle_queue.appendleft(self.vehicle)
 
-    def refresh_with_direction(self, direction):
-        # change the w and h
-        # return nothing
-        pass
+    def exit_road_if_head(self):
+        if self.road.vehicle_queue[-1] == self.vehicle:
+            self.vehicle.s = self.vehicle.s - self.road.l
+            self.road.vehicle_queue.pop()
+
+    def next_road_if_passed(self):
+        is_passed = self.vehicle.s > self.road.l
+        if not is_passed:
+            return
+        self.exit_road_if_head()
+        self.segment_index += 1
+        self.road = route_list[self.segment_index]
+        self.enter_road()
+
+    def update(self):
+        if self.segment_index < len(route_list):
+            self.next_road_if_passed()
+        self.x, self.y = self.road.drive_along(self.vehicle.s)
 
 class Vehicle:
 
@@ -106,17 +118,22 @@ class Vehicle:
         # screen
         self.w = 0
         self.h = 0
+        self.h_offset = 0
         self.canvas = canvas
         self.sprite = self._init_sprite(self.canvas)
         # road
         self.a = 0
-        self.v = 3 # 7 ?
+        self.v = 3 
         self.s = 0
         # TODO set up direction and screen class
         self.front_vehicle = None
         self.route_index = None
+        self.route_list = self.caculate_route()
         self.segment_index = 0
-        self.road = None
+        self.road = self.route_list[self.segment_index]
+
+    def caculate_route(self):
+        return route_table[0]
 
     def _init_sprite(self, canvas):
         self.w, self.h = convert_to_window(self.x, self.y)
@@ -136,7 +153,7 @@ class Vehicle:
             self.s = self.s - self.road.l
             self.road.vehicle_queue.pop()
             self.segment_index += 1
-            self.road = route_table[self.route_index][self.segment_index]
+            self.road = self.route_list[self.segment_index]
             if len(self.road.vehicle_queue) > 0:
                 self.front_vehicle = self.road.vehicle_queue[0]
             else:
