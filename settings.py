@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# TODO micro, time, OD, money, road statics
+
 import tkinter
 from collections import deque
 
@@ -35,27 +37,22 @@ def logger(message):
 
 def prepare_model(canvas):
     res = []
-    # add node and road, and connect them with v1 v2
+    # node and road network
     n1 = Node(canvas, 0, 0)
     n2 = Node(canvas, 200,200)
     tr1 = Road(canvas, n1, n2, 0)
     tr2 = Road(canvas, n1, n2, 1) # second lane
     o3 = Node(canvas, -50, 50)
     r1 = Road(canvas, o3, n1, 0)
-    # add a route table, OD to route lists
-    route_table[0] = [r1, tr2]
-    #
-    # r1.add_vechle
-    v1 = Vehicle(canvas,-50,50)
-    # v1.front_vehicle = r1.add_vehicle_and_get_front(v1)
 
-    #
-    # v2 = Vehicle(canvas,50,50)
-    # v2.road = tr2
-    # tr2.vehicle_queue.appendleft(v2)
-    # 
+    # LATERDO
+    # split prepare into prepare network and OD_profile later
+    # a route table, OD to route lists
+    route_table[0] = [r1, tr2]
+    # OD profile
+    od1 = None # TODO
+    v1 = Vehicle(canvas, od1)
     res.append(v1)
-    # res.append(v2)
     return res
 
 def config_window(window):
@@ -67,106 +64,69 @@ def config_canvas(canvas):
     canvas.configure(bg="black")
     canvas.pack(fill="both", expand=True)
 
-class Direction:
-    def __init__(self, route_list, current_vehicle):
-        self.vehicle = current_vehicle
-        self.segment_index = 0
-        self.road = route_list[self.segment_index]
-        self.front_vehicle = self.new_front_vehicle() #TODO
-        self.x, self.y = self.road.drive_along(current_vehicle.s)
-
-    def new_front_vehicle(self):
-        if len(self.road.vehicle_queue)>0:
-            return self.road.vehicle_queue[0]
-        else:
-            return None
-
-    def enter_road(self):
-            self.front_vehicle = new_front_vehicle()
-            self.road.vehicle_queue.appendleft(self.vehicle)
-
-    def exit_road_if_head(self):
-        if self.road.vehicle_queue[-1] == self.vehicle:
-            self.vehicle.s = self.vehicle.s - self.road.l
-            self.road.vehicle_queue.pop()
-
-    def next_road_if_passed(self):
-        is_passed = self.vehicle.s > self.road.l
-        if not is_passed:
-            return
-        self.exit_road_if_head()
-        self.segment_index += 1
-        self.road = route_list[self.segment_index]
-        self.enter_road()
-
-    def update(self):
-        if self.segment_index < len(route_list):
-            self.next_road_if_passed()
-        self.x, self.y = self.road.drive_along(self.vehicle.s)
-
 class Vehicle:
 
-    def __init__(self, canvas, x, y):
-        # world
-        self.x = x
-        self.y = y
-        # screen
-        self.w = 0
-        self.h = 0
-        self.h_offset = 0
-        self.canvas = canvas
-        self.sprite = self._init_sprite(self.canvas)
-        # road
+    def __init__(self, canvas, OD, s=0):
+        # road inital variables
         self.a = 0
-        self.v = 3 
+        self.v = 3
         self.s = 0
-        # direction
-        self.route_list = self.caculate_route()
+        # direction update
+        self.route_list = self._caculate_route(OD)
         self.segment_index = 0
         self.road = self.route_list[self.segment_index]
-        #
-        self.front_vehicle = self.road.add_vehicle_and_get_front(self)
-
-    def caculate_route(self):
-        return route_table[0]
+        self.front_vehicle = None
+        self.road.add_vehicle_and_update_front(self)
+        self.s = s % self.road.l
+        self.x, self.y = self.road.drive_along(self.s)
+        # screen draw
+        self.w, self.h = convert_to_window(self.x, self.y)
+        self.h += self.road.h_offset
+        self.canvas = canvas
+        self.sprite = self._init_sprite(self.canvas)
 
     def _init_sprite(self, canvas):
-        self.w, self.h = convert_to_window(self.x, self.y)
-        # self.h += self.road.h_offset
         res = canvas.create_rectangle(
                 self.w - vehicle_size_px,
                 self.h - vehicle_size_px,
-                self.w,
-                self.h,
-                fill="red")
+                self.w, self.h, fill="red")
         return res
 
-    def rule(self):
-        is_queue_head = self.road.vehicle_queue[-1] == self
-        is_passed = self.s > self.road.l
-        if is_queue_head and is_passed:
-            self.s = self.s - self.road.l
-            self.road.vehicle_queue.pop()
+    def _transition_if_passed(self):
+        if self.s > self.road.l:
+            self.road.remove_vehicle_and_update_s(self)
             self.segment_index += 1
             self.road = self.route_list[self.segment_index]
-            if len(self.road.vehicle_queue) > 0:
-                self.front_vehicle = self.road.vehicle_queue[0]
-            else:
-                self.front_vehicle = None
-            self.road.vehicle_queue.appendleft(self)
+            self.road.add_vehicle_and_update_front(self)
+
+    def _update_direction(self):
+        # LATERDO, stop when reach D
+        self._transition_if_passed()
+        self.x, self.y = self.road.drive_along(self.s)
+
+    def _update_screen(self):
+        self.w, self.h = convert_to_window(self.x, self.y)
+        self.h += self.road.h_offset
+
+    def _caculate_route(self, OD):
+        # LATERDO
+        return route_table[0]
+
+    def rule(self):
+        # TODO micro rule
+        pass
 
     def go(self):
         self.v = self.v + self.a*time_interval
         self.s = self.s + self.v*time_interval
-        self.x, self.y = self.road.drive_along(self.s)
-        self.w, self.h = convert_to_window(self.x, self.y)
+        self._update_direction()
+        self._update_screen()
 
     def redraw(self):
         self.canvas.coords(self.sprite,
                 self.w - vehicle_size_px,
-                self.h - vehicle_size_px + self.road.h_offset,
-                self.w,
-                self.h + self.road.h_offset)
+                self.h - vehicle_size_px,
+                self.w, self.h) 
 
 class Road:
     def __init__(self, canvas, start, end, lane=0):
@@ -199,14 +159,15 @@ class Road:
         else:
             return None
 
-    def add_vehicle_and_get_front(self, current_vehicle):
-        res = self.vehicle_queue_leftmost()
+    def add_vehicle_and_update_front(self, current_vehicle):
+        current_vehicle.front_vehicle = self.vehicle_queue_leftmost()
         self.vehicle_queue.appendleft(current_vehicle)
-        return res
 
-    def exit(self):
-        pass
-        # return new road
+    def remove_vehicle_and_update_s(self, current_vehicle):
+        not_empty = len(self.vehicle_queue) > 0
+        if not_empty and self.vehicle_queue[-1] == current_vehicle:
+            self.vehicle_queue.pop()
+        current_vehicle.s = current_vehicle.s - self.l
 
     def drive_along(self, s):
         x = (s*self.end.x + (self.l - s)*self.start.x)/self.l
@@ -233,6 +194,7 @@ class Node:
             fill="green")
         return res
 
+    # TODO _update ? merge work
     def update_neighbors(self):
         self.inflow_neighbors = []
         for each_road in self.inflow:
