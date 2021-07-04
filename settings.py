@@ -45,22 +45,17 @@ def prepare_model(canvas):
     # add a route table, OD to route lists
     route_table[0] = [r1, tr2]
     #
-    # tr1.add_vechle
+    # r1.add_vechle
     v1 = Vehicle(canvas,-50,50)
-    #v1.road.vehicle_queue.appendleft(v1)
-    if len(r1.vehicle_queue) > 0:
-        v1.front_vehicle = r1.vehicle_queue[0]
-    else:
-        v1.front_vehicle = None
-    r1.vehicle_queue.appendleft(v1)
+    # v1.front_vehicle = r1.add_vehicle_and_get_front(v1)
 
     #
-    v2 = Vehicle(canvas,50,50)
-    v2.road = tr2
-    tr2.vehicle_queue.appendleft(v2)
+    # v2 = Vehicle(canvas,50,50)
+    # v2.road = tr2
+    # tr2.vehicle_queue.appendleft(v2)
     # 
     res.append(v1)
-    res.append(v2)
+    # res.append(v2)
     return res
 
 def config_window(window):
@@ -125,12 +120,12 @@ class Vehicle:
         self.a = 0
         self.v = 3 
         self.s = 0
-        # TODO set up direction and screen class
-        self.front_vehicle = None
-        self.route_index = None
+        # direction
         self.route_list = self.caculate_route()
         self.segment_index = 0
         self.road = self.route_list[self.segment_index]
+        #
+        self.front_vehicle = self.road.add_vehicle_and_get_front(self)
 
     def caculate_route(self):
         return route_table[0]
@@ -198,8 +193,16 @@ class Road:
                 arrow=tkinter.LAST, fill="white")
         return res
 
-    def enter(self):
-        pass
+    def vehicle_queue_leftmost(self):
+        if len(self.vehicle_queue)>0:
+            return self.vehicle_queue[0]
+        else:
+            return None
+
+    def add_vehicle_and_get_front(self, current_vehicle):
+        res = self.vehicle_queue_leftmost()
+        self.vehicle_queue.appendleft(current_vehicle)
+        return res
 
     def exit(self):
         pass
