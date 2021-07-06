@@ -17,7 +17,9 @@ class View:
         if self.t < self.t_max:
             for each in self.model:
                 each.rule()
+            for each in self.model:
                 each.go()
+            for each in self.model:
                 each.redraw()
             self.t += 1
             self.canvas.after(settings.animation_refresh_milliseconds, self.run)

@@ -5,14 +5,15 @@
 import tkinter
 from collections import deque
 
+DEBUG = False
+
 animation_window_width=800
 animation_window_height=800
-animation_ball_radius = 30
-animation_ball_min_movement = 5
 animation_refresh_milliseconds = 100
 
 # world_width_m = 200000
 # world_height_m = 200000
+ramp_v_max = 3
 world_width_m = 1600
 world_height_m = 1600
 vehicle_size_px = 6
@@ -25,7 +26,7 @@ sh = animation_window_height/world_height_m
 total_ticks = 30 # 3600 = 1 hour
 time_interval = 1 # 1 second per tick
 
-route_table = [None]
+route_table = [None, None]
 
 def convert_to_window(x, y):
     w = int(x*sw + tw)
@@ -38,21 +39,29 @@ def logger(message):
 def prepare_model(canvas):
     res = []
     # node and road network
+    n0 = Node(canvas, -50, 50)
     n1 = Node(canvas, 0, 0)
     n2 = Node(canvas, 200,200)
-    tr1 = Road(canvas, n1, n2, 0)
-    tr2 = Road(canvas, n1, n2, 1) # second lane
-    o3 = Node(canvas, -50, 50)
-    r1 = Road(canvas, o3, n1, 0)
-
+    n3 = Node(canvas, -50, -50)
+    r0 = Road(canvas, n0, n1, 0)
+    r1 = Road(canvas, n1, n2, 0)
+    r2 = Road(canvas, n1, n2, 1)
+    r3 = Road(canvas, n3, n1, 0)
     # LATERDO
     # split prepare into prepare network and OD_profile later
     # a route table, OD to route lists
-    route_table[0] = [r1, tr2]
     # OD profile
-    od1 = None # TODO
-    v1 = Vehicle(canvas, od1)
+    route_table[0] = [r0, r2]
+    route_table[1] = [r3, r2]
+    v1 = Vehicle(canvas, 0)
+    v2 = Vehicle(canvas, 1, 10)
+    res.append(n1)
+    res.append(n2)
+    res.append(r0)
+    res.append(r3)
+    res.append(r2)
     res.append(v1)
+    res.append(v2)
     return res
 
 def config_window(window):
@@ -68,8 +77,9 @@ class Vehicle:
 
     def __init__(self, canvas, OD, s=0):
         # road inital variables
+        self.t = 0
         self.a = 0
-        self.v = 3
+        self.v = 6
         self.s = 0
         # direction update
         self.route_list = self._caculate_route(OD)
@@ -100,7 +110,7 @@ class Vehicle:
             self.road.add_vehicle_and_update_front(self)
 
     def _update_direction(self):
-        # LATERDO, stop when reach D
+        # LATERDO, stop when reach D, give travel time
         self._transition_if_passed()
         self.x, self.y = self.road.drive_along(self.s)
 
@@ -110,17 +120,33 @@ class Vehicle:
 
     def _caculate_route(self, OD):
         # LATERDO
-        return route_table[0]
+        return route_table[OD]
+
+    def _nearest_car_distance(self):
+        current_rest_distance = self.road.l - self.s
+        if self.front_vehicle:
+            return self.front_vehicle.s - self.s
+        for rest_distance, vehicle in self.road.end.inflow_neighbors:
+            if rest_distance < current_rest_distance:
+                return current_rest_distance - rest_distance
+        if self.segment_index + 1 < len(self.route_list):
+            next_road = self.route_list[self.segment_index + 1]
+            far_vehicle = next_road.vehicle_queue_leftmost()
+            if far_vehicle:
+                return far_vehicle.s + self.road.l - self.s
+        return None
 
     def rule(self):
         # TODO micro rule
-        pass
+        if DEBUG:
+            print("--debug--", self.t)
 
     def go(self):
         self.v = self.v + self.a*time_interval
         self.s = self.s + self.v*time_interval
         self._update_direction()
         self._update_screen()
+        self.t += 1
 
     def redraw(self):
         self.canvas.coords(self.sprite,
@@ -130,6 +156,7 @@ class Vehicle:
 
 class Road:
     def __init__(self, canvas, start, end, lane=0):
+        self.t = 0
         self.start, self.end, self.l = self._init_endpoint(start, end)
         self.v_max = 25
         self.vehicle_queue = deque() #left right 0, -1
@@ -174,8 +201,20 @@ class Road:
         y = (s*self.end.y + (self.l - s)*self.start.y)/self.l
         return x, y
 
+    def rule(self):
+        pass
+
+    def go(self):
+        if DEBUG:
+            print("--debug--", self.t, len(self.vehicle_queue))
+        self.t += 1
+
+    def redraw(self):
+        pass
+
 class Node:
     def __init__(self, canvas, x, y):
+        self.t = 0
         self.x = x
         self.y = y
         self.inflow = []
@@ -194,7 +233,6 @@ class Node:
             fill="green")
         return res
 
-    # TODO _update ? merge work
     def update_neighbors(self):
         self.inflow_neighbors = []
         for each_road in self.inflow:
@@ -204,10 +242,12 @@ class Node:
         self.inflow_neighbors.sort(reverse=True)
 
     def rule(self):
-        self.inflow_neighbors()
+        self.update_neighbors()
 
     def go(self):
-        pass
+        if DEBUG:
+            print("--debug--", self.t, self.inflow_neighbors)
+        self.t += 1
 
     def redraw(self):
         pass
