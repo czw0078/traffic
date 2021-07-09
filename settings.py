@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# TODO micro, time, OD, money, road statics
+# TODO micro, OD, money, adjust MAP, road statics
 
 import tkinter
 from collections import deque
@@ -23,10 +23,14 @@ th = 0.5*animation_window_height
 sw = animation_window_width/world_width_m
 sh = animation_window_height/world_height_m
 
-total_ticks = 30 # 3600 = 1 hour
+total_ticks = 60 # 3600 = 1 hour
 time_interval = 1 # 1 second per tick
+global_t = 0 # the global clock
 
 route_table = [None, None]
+
+total_travel_time = 0
+total_number_vehicle = 0
 
 def convert_to_window(x, y):
     w = int(x*sw + tw)
@@ -37,7 +41,8 @@ def logger(message):
     print(message)
 
 def prepare_model(canvas):
-    res = []
+    patch_list = []
+    turtle_set = set() 
     # node and road network
     n0 = Node(canvas, -50, 50)
     n1 = Node(canvas, 0, 0)
@@ -53,16 +58,16 @@ def prepare_model(canvas):
     # OD profile
     route_table[0] = [r0, r2]
     route_table[1] = [r3, r2]
-    v1 = Vehicle(canvas, 0)
-    v2 = Vehicle(canvas, 1, 10)
-    res.append(n1)
-    res.append(n2)
-    res.append(r0)
-    res.append(r3)
-    res.append(r2)
-    res.append(v1)
-    res.append(v2)
-    return res
+    v1 = Vehicle(canvas, 0, tag="v1")
+    v2 = Vehicle(canvas, 1, 10, tag="v2")
+    patch_list.append(n1)
+    patch_list.append(n2)
+    patch_list.append(r0)
+    patch_list.append(r3)
+    patch_list.append(r2)
+    turtle_set.add(v1)
+    turtle_set.add(v2)
+    return patch_list, turtle_set
 
 def config_window(window):
     window.title("Traffic Demo")
@@ -75,7 +80,13 @@ def config_canvas(canvas):
 
 class Vehicle:
 
-    def __init__(self, canvas, OD, s=0):
+    def __init__(self, canvas, OD, s=0, tag="x"):
+        #
+        self.tag = tag
+        # number +1
+        global total_number_vehicle
+        total_number_vehicle += 1
+        self.finished = False
         # road inital variables
         self.t = 0
         self.a = 0
@@ -103,14 +114,23 @@ class Vehicle:
         return res
 
     def _transition_if_passed(self):
-        if self.s > self.road.l:
+        if self.s >= self.road.l:
             self.road.remove_vehicle_and_update_s(self)
             self.segment_index += 1
             self.road = self.route_list[self.segment_index]
             self.road.add_vehicle_and_update_front(self)
 
     def _update_direction(self):
-        # LATERDO, stop when reach D, give travel time
+        last_segment = self.segment_index == len(self.route_list) - 1
+        if last_segment and self.s >= self.road.l:
+            # __del__
+            self.finished = True
+            self.road.remove_vehicle_and_update_s(self)
+            self.front_vehicle = None
+            self.road.end.update_neighbors()
+            global total_travel_time
+            total_travel_time += self.t
+            return
         self._transition_if_passed()
         self.x, self.y = self.road.drive_along(self.s)
 
@@ -156,7 +176,6 @@ class Vehicle:
 
 class Road:
     def __init__(self, canvas, start, end, lane=0):
-        self.t = 0
         self.start, self.end, self.l = self._init_endpoint(start, end)
         self.v_max = 25
         self.vehicle_queue = deque() #left right 0, -1
@@ -206,15 +225,10 @@ class Road:
 
     def go(self):
         if DEBUG:
-            print("--debug--", self.t, len(self.vehicle_queue))
-        self.t += 1
-
-    def redraw(self):
-        pass
+            print("--debug--", global_t, len(self.vehicle_queue))
 
 class Node:
     def __init__(self, canvas, x, y):
-        self.t = 0
         self.x = x
         self.y = y
         self.inflow = []
@@ -246,18 +260,7 @@ class Node:
 
     def go(self):
         if DEBUG:
-            print("--debug--", self.t, self.inflow_neighbors)
-        self.t += 1
-
-    def redraw(self):
-        pass
-
-
-
-
-
-
-
+            print("--debug--", global_t, self.inflow_neighbors)
 
 
 
