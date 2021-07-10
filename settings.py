@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-# TODO micro, OD, money, adjust MAP, road statics
+# TODO OD, money, adjust MAP, road statics
 
 import tkinter
 from collections import deque
+import automata
 
 DEBUG = False
 
@@ -23,7 +24,7 @@ th = 0.5*animation_window_height
 sw = animation_window_width/world_width_m
 sh = animation_window_height/world_height_m
 
-total_ticks = 60 # 3600 = 1 hour
+total_ticks = 20 # 3600 = 1 hour
 time_interval = 1 # 1 second per tick
 global_t = 0 # the global clock
 
@@ -90,8 +91,11 @@ class Vehicle:
         # road inital variables
         self.t = 0
         self.a = 0
-        self.v = 6
+        self.v = 0 # 6
+        self.next_a = 0
+        self.next_v = 0
         self.s = 0
+        self.kksw = automata.kksw()
         # direction update
         self.route_list = self._caculate_route(OD)
         self.segment_index = 0
@@ -142,26 +146,33 @@ class Vehicle:
         # LATERDO
         return route_table[OD]
 
-    def _nearest_car_distance(self):
+    def _nearest_car_vl_g(self):
         current_rest_distance = self.road.l - self.s
         if self.front_vehicle:
-            return self.front_vehicle.s - self.s
+            # could be front car in the next road
+            g=(self.front_vehicle.s - self.s)%self.road.l
+            return self.front_vehicle.v, g 
         for rest_distance, vehicle in self.road.end.inflow_neighbors:
             if rest_distance < current_rest_distance:
-                return current_rest_distance - rest_distance
+                return vehicle.v, current_rest_distance - rest_distance
         if self.segment_index + 1 < len(self.route_list):
             next_road = self.route_list[self.segment_index + 1]
             far_vehicle = next_road.vehicle_queue_leftmost()
             if far_vehicle:
-                return far_vehicle.s + self.road.l - self.s
-        return None
+                return far_vehicle.v, far_vehicle.s + self.road.l - self.s
+        return 0, 120
 
     def rule(self):
-        # TODO micro rule
+        # TODO micro rul
+        vl, g = self._nearest_car_vl_g()
+        self.a_next, self.v_next = self.kksw.update_a_v_vl_g_and_get_a_v(
+                self.a, self.v, vl, g)
         if DEBUG:
-            print("--debug--", self.t)
+            print("--debug--", self.t, self.tag, "vl_g", self._nearest_car_vl_g())
 
     def go(self):
+        self.v = self.v_next
+        self.a = self.a_next
         self.v = self.v + self.a*time_interval
         self.s = self.s + self.v*time_interval
         self._update_direction()
