@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-# TODO OD, money, adjust MAP, road statics
+# TODO OD, money, adjust MAP
+# The update of road information only available next round
+# therefore the agents has 1 step delay by default
 
 import tkinter
 from collections import deque
@@ -82,8 +84,9 @@ def config_canvas(canvas):
 class Vehicle:
 
     def __init__(self, canvas, OD, s=0, tag="x"):
-        #
+        # annotation and stats
         self.tag = tag
+        self.timestamp = 0
         # number +1
         global total_number_vehicle
         total_number_vehicle += 1
@@ -117,6 +120,11 @@ class Vehicle:
                 self.w, self.h, fill="red")
         return res
 
+    def _timing_if_passed(self):
+        if self.s >= self.road.l:
+            self.road.last_travel_time = global_t - self.timestamp
+            self.timestamp = global_t
+
     def _transition_if_passed(self):
         if self.s >= self.road.l:
             self.road.remove_vehicle_and_update_s(self)
@@ -125,6 +133,7 @@ class Vehicle:
             self.road.add_vehicle_and_update_front(self)
 
     def _update_direction(self):
+        self._timing_if_passed()
         last_segment = self.segment_index == len(self.route_list) - 1
         if last_segment and self.s >= self.road.l:
             # __del__
@@ -189,6 +198,7 @@ class Road:
     def __init__(self, canvas, start, end, lane=0):
         self.start, self.end, self.l = self._init_endpoint(start, end)
         self.v_max = 25
+        self.last_travel_time = None
         self.vehicle_queue = deque() #left right 0, -1
         # shape
         self.h_offset = -lane*6
@@ -209,6 +219,12 @@ class Road:
         res = canvas.create_line(self.w1, self.h1, self.w2, self.h2, 
                 arrow=tkinter.LAST, fill="white")
         return res
+
+    def get_travel_time(self):
+        if self.last_travel_time == None:
+            return self.l/self.v_max
+        else:
+            return self.last_travel_time
 
     def vehicle_queue_leftmost(self):
         if len(self.vehicle_queue)>0:
@@ -235,8 +251,8 @@ class Road:
         pass
 
     def go(self):
-        if DEBUG:
-            print("--debug--", global_t, len(self.vehicle_queue))
+        if Debug:
+            print("--debug--", global_t, self.get_travel_time())
 
 class Node:
     def __init__(self, canvas, x, y):
