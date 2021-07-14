@@ -5,7 +5,6 @@ import settings
 
 class View:
     def __init__(self, root):
-        # self.t = 0
         self.t_max = settings.total_ticks
         self.window = root
         settings.config_window(self.window)

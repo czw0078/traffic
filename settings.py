@@ -44,7 +44,6 @@ def logger(message):
     print(message)
 
 def prepare_model(canvas):
-    patch_list = []
     turtle_set = set() 
     # node and road network
     n0 = Node(canvas, -50, 50)
@@ -52,9 +51,13 @@ def prepare_model(canvas):
     n2 = Node(canvas, 200,200)
     n3 = Node(canvas, -50, -50)
     r0 = Road(canvas, n0, n1, 0)
-    r1 = Road(canvas, n1, n2, 0)
+    r1 = Road(canvas, n2, n1, 0)
     r2 = Road(canvas, n1, n2, 1)
     r3 = Road(canvas, n3, n1, 0)
+    node_list = [n0, n1, n2, n3]
+    road_list = [r0, r1, r2, r3]
+    patch_list = node_list + road_list
+    # cost
     # LATERDO
     # split prepare into prepare network and OD_profile later
     # a route table, OD to route lists
@@ -63,11 +66,6 @@ def prepare_model(canvas):
     route_table[1] = [r3, r2]
     v1 = Vehicle(canvas, 0, tag="v1")
     v2 = Vehicle(canvas, 1, 10, tag="v2")
-    patch_list.append(n1)
-    patch_list.append(n2)
-    patch_list.append(r0)
-    patch_list.append(r3)
-    patch_list.append(r2)
     turtle_set.add(v1)
     turtle_set.add(v2)
     return patch_list, turtle_set
@@ -112,6 +110,9 @@ class Vehicle:
         self.h += self.road.h_offset
         self.canvas = canvas
         self.sprite = self._init_sprite(self.canvas)
+
+    def __repr__(self):
+        return self.tag
 
     def _init_sprite(self, canvas):
         res = canvas.create_rectangle(
@@ -205,6 +206,9 @@ class Road:
         self.road_width_px = 3
         self.sprite = self._init_sprite(canvas)
 
+    def __repr__(self):
+        return str(self.start.tag)+"->"+str(self.end.tag)
+
     def _init_endpoint(self, start, end):
         end.inflow.append(self)
         start.outflow.append(self)
@@ -251,11 +255,12 @@ class Road:
         pass
 
     def go(self):
-        if Debug:
+        if DEBUG:
             print("--debug--", global_t, self.get_travel_time())
 
 class Node:
-    def __init__(self, canvas, x, y):
+    def __init__(self, canvas, x, y, tag="vx"):
+        self.tag = tag
         self.x = x
         self.y = y
         self.inflow = []
@@ -264,6 +269,9 @@ class Node:
         self.node_width_px = 3
         self.node_height_px = 24
         self.sprite = self._init_sprite(canvas)
+
+    def __repr__(self):
+        return self.tag
 
     def _init_sprite(self, canvas):
         self.w, self.h = convert_to_window(self.x, self.y)
