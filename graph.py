@@ -14,7 +14,7 @@ class Network:
             self.n2r[a] = {}
 
         for r in road_list:
-            self.n2r[r.start][r.end] = r.get_travel_time()
+            self.n2r[r.start][r.end] = r
 
     def caculate_route(self):
         for a in self.node_list:

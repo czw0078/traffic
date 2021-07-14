@@ -7,6 +7,7 @@
 import tkinter
 from collections import deque
 import automata
+import graph
 
 DEBUG = False
 
@@ -46,10 +47,10 @@ def logger(message):
 def prepare_model(canvas):
     turtle_set = set() 
     # node and road network
-    n0 = Node(canvas, -50, 50)
-    n1 = Node(canvas, 0, 0)
-    n2 = Node(canvas, 200,200)
-    n3 = Node(canvas, -50, -50)
+    n0 = Node(canvas, -50, 50, 'n0')
+    n1 = Node(canvas, 0, 0, 'n1')
+    n2 = Node(canvas, 200,200, 'n2')
+    n3 = Node(canvas, -50, -50, 'n3')
     r0 = Road(canvas, n0, n1, 0)
     r1 = Road(canvas, n2, n1, 0)
     r2 = Road(canvas, n1, n2, 1)
@@ -57,6 +58,11 @@ def prepare_model(canvas):
     node_list = [n0, n1, n2, n3]
     road_list = [r0, r1, r2, r3]
     patch_list = node_list + road_list
+
+    net = graph.Network(node_list, road_list)
+    net.caculate_route()
+    print(net.get_current_and_next_road(n3, n2))
+    print(net.get_current_and_next_road(n0, n2))
     # cost
     # LATERDO
     # split prepare into prepare network and OD_profile later
