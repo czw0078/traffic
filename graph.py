@@ -16,6 +16,8 @@ class Network:
         for r in road_list:
             self.n2r[r.start][r.end] = r
 
+        self.caculate_route() # recaculate later
+
     def caculate_route(self):
         for a in self.node_list:
             for b in self.node_list:
@@ -67,29 +69,9 @@ class Network:
         elif len(points) == 3:
             return self.n2r[points[0]][points[1]], self.n2r[points[1]][points[2]]
 
-def prepare():
-    v0 = Node(0)
-    v1 = Node(1)
-    v2 = Node(2)
-    v3 = Node(3)
-    r0 = Road(v0, v1, 5)
-    r1 = Road(v0, v3, 7)
-    r2 = Road(v1, v2, 4)
-    r3 = Road(v1, v3, 2)
-    r4 = Road(v2, v0, 3)
-    r5 = Road(v2, v1, 3)
-    r6 = Road(v2, v3, 2)
-    r7 = Road(v3, v2, 1)
-    node_list = [v0, v1,v2,v3]
-    road_list = [r0, r1,r2,r3,r4,r5,r6,r7]
-    network = Network(node_list, road_list)
-    network.caculate_route()
-    print(network.cost)
-    print(network.next)
-    print(network.get_path(v1, v0))
-    print(network.get_path(v3, v1))
-    print(network.get_current_and_next_road(v1, v0))
-    print(network.get_current_and_next_road(v3, v1))
+    def rule(self):
+        self.caculate_route()
 
-
+    def go(self):
+        pass
 

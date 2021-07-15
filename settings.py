@@ -27,7 +27,7 @@ th = 0.5*animation_window_height
 sw = animation_window_width/world_width_m
 sh = animation_window_height/world_height_m
 
-total_ticks = 20 # 3600 = 1 hour
+total_ticks = 30 # 3600 = 1 hour
 time_interval = 1 # 1 second per tick
 global_t = 0 # the global clock
 
@@ -45,7 +45,6 @@ def logger(message):
     print(message)
 
 def prepare_model(canvas):
-    turtle_set = set() 
     # node and road network
     n0 = Node(canvas, -50, 50, 'n0')
     n1 = Node(canvas, 0, 0, 'n1')
@@ -57,21 +56,13 @@ def prepare_model(canvas):
     r3 = Road(canvas, n3, n1, 0)
     node_list = [n0, n1, n2, n3]
     road_list = [r0, r1, r2, r3]
-    patch_list = node_list + road_list
-
     net = graph.Network(node_list, road_list)
-    net.caculate_route()
-    print(net.get_current_and_next_road(n3, n2))
-    print(net.get_current_and_next_road(n0, n2))
-    # cost
-    # LATERDO
-    # split prepare into prepare network and OD_profile later
-    # a route table, OD to route lists
-    # OD profile
-    route_table[0] = [r0, r2]
-    route_table[1] = [r3, r2]
-    v1 = Vehicle(canvas, 0, tag="v1")
-    v2 = Vehicle(canvas, 1, 10, tag="v2")
+    patch_list = node_list + road_list + [net]
+
+    # LATERDO OD_profile
+    turtle_set = set() 
+    v1 = Vehicle(canvas, net, n0, n2,  0, tag="v1")
+    v2 = Vehicle(canvas, net, n3, n2, 10, tag="v2")
     turtle_set.add(v1)
     turtle_set.add(v2)
     return patch_list, turtle_set
@@ -87,7 +78,7 @@ def config_canvas(canvas):
 
 class Vehicle:
 
-    def __init__(self, canvas, OD, s=0, tag="x"):
+    def __init__(self, canvas, net, O, D, s=0, tag="x"):
         # annotation and stats
         self.tag = tag
         self.timestamp = 0
@@ -104,9 +95,9 @@ class Vehicle:
         self.s = 0
         self.kksw = automata.kksw()
         # direction update
-        self.route_list = self._caculate_route(OD)
-        self.segment_index = 0
-        self.road = self.route_list[self.segment_index]
+        self.net = net
+        self.D = D
+        self.road, self.next_road = self.net.get_current_and_next_road(O,D)
         self.front_vehicle = None
         self.road.add_vehicle_and_update_front(self)
         self.s = s % self.road.l
@@ -121,10 +112,15 @@ class Vehicle:
         return self.tag
 
     def _init_sprite(self, canvas):
+        # if self.tag == "v1":
+        #     color = "red"
+        # else:
+        #     color = "green"
+        color = "red"
         res = canvas.create_rectangle(
                 self.w - vehicle_size_px,
                 self.h - vehicle_size_px,
-                self.w, self.h, fill="red")
+                self.w, self.h, fill=color)
         return res
 
     def _timing_if_passed(self):
@@ -135,19 +131,20 @@ class Vehicle:
     def _transition_if_passed(self):
         if self.s >= self.road.l:
             self.road.remove_vehicle_and_update_s(self)
-            self.segment_index += 1
-            self.road = self.route_list[self.segment_index]
+            self._recaculate_route()
             self.road.add_vehicle_and_update_front(self)
 
     def _update_direction(self):
         self._timing_if_passed()
-        last_segment = self.segment_index == len(self.route_list) - 1
-        if last_segment and self.s >= self.road.l:
-            # __del__
+        # if last road, __del__ remove all reference
+        if self.next_road == None and self.s >= self.road.l:
             self.finished = True
             self.road.remove_vehicle_and_update_s(self)
             self.front_vehicle = None
             self.road.end.update_neighbors()
+            # and last time draw when > road.l
+            self.x = self.road.end.x
+            self.y = self.road.end.y
             global total_travel_time
             total_travel_time += self.t
             return
@@ -158,9 +155,9 @@ class Vehicle:
         self.w, self.h = convert_to_window(self.x, self.y)
         self.h += self.road.h_offset
 
-    def _caculate_route(self, OD):
-        # LATERDO
-        return route_table[OD]
+    def _recaculate_route(self):
+        O = self.road.end
+        self.road, self.next_road = self.net.get_current_and_next_road(O, self.D)
 
     def _nearest_car_vl_g(self):
         current_rest_distance = self.road.l - self.s
@@ -171,20 +168,20 @@ class Vehicle:
         for rest_distance, vehicle in self.road.end.inflow_neighbors:
             if rest_distance < current_rest_distance:
                 return vehicle.v, current_rest_distance - rest_distance
-        if self.segment_index + 1 < len(self.route_list):
-            next_road = self.route_list[self.segment_index + 1]
-            far_vehicle = next_road.vehicle_queue_leftmost()
+        if self.next_road:
+            far_vehicle = self.next_road.vehicle_queue_leftmost()
             if far_vehicle:
                 return far_vehicle.v, far_vehicle.s + self.road.l - self.s
         return 0, 120
 
     def rule(self):
-        # TODO micro rul
+        if self.front_vehicle and self.front_vehicle.finished:
+            self.front_vehicle = None
         vl, g = self._nearest_car_vl_g()
         self.a_next, self.v_next = self.kksw.update_a_v_vl_g_and_get_a_v(
                 self.a, self.v, vl, g)
         if DEBUG:
-            print("--debug--", self.t, self.tag, "vl_g", self._nearest_car_vl_g())
+            print("--debug--", self.t, self.tag, self.road, self.next_road, self.s,self.road.l, vl, g)
 
     def go(self):
         self.v = self.v_next
