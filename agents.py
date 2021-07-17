@@ -41,6 +41,9 @@ class Vehicle:
         self.canvas = canvas
         self.sprite = self._init_sprite(self.canvas)
 
+    def __lt__(self, other):
+        return self.s < other.s
+
     def __repr__(self):
         return self.tag
 
