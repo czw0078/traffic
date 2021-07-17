@@ -8,6 +8,7 @@ import tkinter
 import graph
 import agents
 import patches
+import profile
 
 DEBUG = False
 
@@ -25,6 +26,8 @@ tw = 0.5*animation_window_width
 th = 0.5*animation_window_height
 sw = animation_window_width/world_width_m
 sh = animation_window_height/world_height_m
+
+min_gap = 7.6 # the minimal gap between cars
 
 total_ticks = 30 # 3600 = 1 hour
 time_interval = 1 # 1 second per tick
@@ -47,35 +50,66 @@ def config_canvas(canvas):
     canvas.configure(bg="black")
     canvas.pack(fill="both", expand=True)
 
-def prepare_model(canvas):
-    # node and road network
-    n0 = patches.Node(canvas, -50, 50, 'n0')
-    n1 = patches.Node(canvas, 0, 0, 'n1')
-    n2 = patches.Node(canvas, 200,200, 'n2')
-    n3 = patches.Node(canvas, -50, -50, 'n3')
-    r0 = patches.Road(canvas, n0, n1, 0)
-    r1 = patches.Road(canvas, n2, n1, 0)
-    r2 = patches.Road(canvas, n1, n2, 1)
-    r3 = patches.Road(canvas, n3, n1, 0)
-    node_list = [n0, n1, n2, n3]
-    road_list = [r0, r1, r2, r3]
-    net = graph.Network(node_list, road_list)
-    patch_list = node_list + road_list + [net]
-
-    # LATERDO OD_profile
-    turtle_set = set()
-    v1 = agents.Vehicle(canvas, net, n0, n2,  0)
-    v2 = agents.Vehicle(canvas, net, n3, n2, 10)
-    turtle_set.add(v1)
-    turtle_set.add(v2)
-    return patch_list, turtle_set
-
-def add_vehicle(canvas, net, ramp, D, N, t):
-    pass
 
 class Map:
+    def __init__(self, canvas):
+        self.canvas = canvas
+        self.node_list = []
+        self.road_list = []
+        self.net = None
+        self.patch_list = None
+        self.turtle_set = set()
+        self.ODN = profile.ODN
 
-    def __init__(self, canvas, net):
-        pass
+    def node(self, x, y):
+        n = len(self.node_list)
+        tag = 'n'+str(n)
+        res = patches.Node(self.canvas, x, y, tag)
+        self.node_list.append(res)
+        return res
 
+    def road(self, start, end, lane):
+        res = patches.Road(self.canvas, start, end, lane)
+        self.road_list.append(res)
+        return res
+
+    def patch_section_end(self):
+        if self.net == None:
+            self.net = graph.Network(self.node_list, self.road_list)
+        if self.patch_list == None:
+            self.patch_list = self.node_list + self.road_list + [self.net]
+
+    def demand(self):
+        if global_t < len(self.ODN) and self.ODN[global_t] != None:
+            print("demand", self.ODN[global_t])
+            i_O, i_D, N = self.ODN[global_t]
+            O = self.node_list[i_O]
+            D = self.node_list[i_D]
+            for _ in range(N):
+                res = agents.Vehicle(self.canvas, self.net, O, D)
+                self.turtle_set.add(res)
+
+    def prepare_model(self):
+        self.prepare_patch_list()
+
+        if self.net == None:
+            self.net = graph.Network(self.node_list, self.road_list)
+        if self.patch_list == None:
+            self.patch_list = self.node_list + self.road_list + [self.net]
+        # self.patch_section_end()
+        return self.patch_list, self.turtle_set
+
+    def prepare_patch_list(self):
+
+        n0 = self.node(-50, 50)
+        n1 = self.node(0, 0)
+        n2 = self.node(200,200)
+        n3 = self.node(-50, -50)
+        n4 = self.node(400, 200)
+
+        r0 = self.road(n0, n1, 0)
+        r1 = self.road(n2, n1, 0)
+        r2 = self.road(n1, n2, 1)
+        r3 = self.road(n3, n1, 0)
+        r4 = self.road(n2, n4, 0)
 

@@ -49,6 +49,8 @@ class Road:
 
     def add_vehicle_and_update_front(self, current_vehicle):
         current_vehicle.front_vehicle = self.vehicle_queue_leftmost()
+        if current_vehicle.front_vehicle != None:
+            current_vehicle.s = current_vehicle.front_vehicle.s - settings.min_gap
         self.vehicle_queue.appendleft(current_vehicle)
 
     def remove_vehicle_and_update_s(self, current_vehicle):

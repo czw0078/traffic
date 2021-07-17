@@ -10,10 +10,13 @@ class View:
         settings.config_window(self.window)
         self.canvas = tkinter.Canvas(self.window)
         settings.config_canvas(self.canvas)
-        self.patch_list, self.turtle_set = settings.prepare_model(self.canvas)
+        self.map = settings.Map(self.canvas)
+        self.patch_list, self.turtle_set = self.map.prepare_model()
 
     def run(self):
         if settings.global_t < self.t_max:
+
+            self.map.demand()
 
             for each in self.patch_list:
                 each.rule()

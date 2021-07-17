@@ -8,7 +8,7 @@ DEBUG = False
 
 class Vehicle:
 
-    def __init__(self, canvas, net, O, D, s=0, tag="v"):
+    def __init__(self, canvas, net, O, D, s=0, close_end=True, tag="v"):
         # annotation and stats
         self.tag = tag
         self.timestamp = 0
@@ -21,7 +21,7 @@ class Vehicle:
         self.v = 0
         self.next_a = 0
         self.next_v = 0
-        self.s = 0
+        # self.s = s
         self.kksw = automata.kksw()
         # direction update
         self.net = net
@@ -29,7 +29,11 @@ class Vehicle:
         self.road, self.next_road = self.net.get_current_and_next_road(O,D)
         self.front_vehicle = None
         self.road.add_vehicle_and_update_front(self)
-        self.s = s % self.road.l
+        # adjust s
+        if close_end:
+            self.s = self.road.l - 0.1
+        else:
+            self.s = s
         self.x, self.y = self.road.drive_along(self.s)
         # screen draw
         self.w, self.h = settings.convert_to_window(self.x, self.y)
