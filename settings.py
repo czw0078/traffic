@@ -29,11 +29,11 @@ sh = animation_window_height/world_height_m
 
 min_gap = 7.6 # the minimal gap between cars
 
-total_ticks = 30 # 3600 = 1 hour
+total_ticks = 300 # 3600 = 1 hour
 time_interval = 1 # 1 second per tick
 global_t = 0 # the global clock
 
-total_travel_time = 0
+total_travel_time = []
 total_number_vehicle = 0
 
 def convert_to_window(x, y):

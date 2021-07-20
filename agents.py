@@ -77,7 +77,7 @@ class Vehicle:
             # and last time draw when > road.l
             self.x = self.road.end.x
             self.y = self.road.end.y
-            settings.total_travel_time += self.t
+            settings.total_travel_time.append(self.t)
             return
         self._transition_if_passed()
         self.x, self.y = self.road.drive_along(self.s)
