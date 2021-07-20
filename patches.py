@@ -16,6 +16,8 @@ class Road:
         self.h_offset = -lane*6
         self.road_width_px = 3
         self.sprite = self._init_sprite(canvas)
+        if DEBUG:
+            print(self.start, "->",self.end,self.l)
 
     def __repr__(self):
         return str(self.start.tag)+"->"+str(self.end.tag)
@@ -49,8 +51,6 @@ class Road:
 
     def add_vehicle_and_update_front(self, current_vehicle):
         current_vehicle.front_vehicle = self.vehicle_queue_leftmost()
-        if current_vehicle.front_vehicle != None:
-            current_vehicle.s = current_vehicle.front_vehicle.s - settings.min_gap
         self.vehicle_queue.appendleft(current_vehicle)
 
     def remove_vehicle_and_update_s(self, current_vehicle):

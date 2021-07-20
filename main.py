@@ -37,8 +37,8 @@ class View:
             settings.global_t += 1
             self.canvas.after(settings.animation_refresh_milliseconds, self.run)
         else:
-            print("ticks:", settings.global_t)
-            print("average travel time:", settings.total_travel_time)
+            # print("ticks:", settings.global_t)
+            print(",".join(map(str, settings.total_travel_time)))
 
 tk = tkinter.Tk()
 widget = View(tk)

@@ -1,13 +1,17 @@
 import settings
 
-# ODN = [
-#         [[0,4,1]],
-#         None,
-#         None,
-#         None,
-#         None,
-#         [[3,4,1]]
-#     ]
+ODN = [
+        [[0,3,1]],
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        [[0,3,1]],
+    ]
 
 def OD_per_20_second(O, D, x, T):
     res = [None for _ in range(T)]
@@ -17,5 +21,5 @@ def OD_per_20_second(O, D, x, T):
     return res
 
 def get_ODN(T):
-    return OD_per_20_second(0, 3, 1, T)
+    return OD_per_20_second(0, 3, 20, T)
 

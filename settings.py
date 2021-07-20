@@ -14,7 +14,7 @@ DEBUG = False
 
 animation_window_width=800
 animation_window_height=800
-animation_refresh_milliseconds = 100
+animation_refresh_milliseconds = 1 # for demo it could be 100
 
 # world_width_m = 200000
 # world_height_m = 200000
@@ -29,7 +29,7 @@ sh = animation_window_height/world_height_m
 
 min_gap = 7.6 # the minimal gap between cars
 
-total_ticks = 300 # 3600 = 1 hour
+total_ticks = 600 # 600 = 10 min, 3600 = 1 hour
 time_interval = 1 # 1 second per tick
 global_t = 0 # the global clock
 
@@ -81,7 +81,7 @@ class Map:
 
     def demand(self):
         if global_t < len(self.ODN) and self.ODN[global_t] != None:
-            print("demand", self.ODN[global_t])
+            # print("demand", self.ODN[global_t])
             for i_O, i_D, N in self.ODN[global_t]:
                 O = self.node_list[i_O]
                 D = self.node_list[i_D]

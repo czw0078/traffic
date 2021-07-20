@@ -34,12 +34,18 @@ class Vehicle:
             self.s = self.road.l - 0.1
         else:
             self.s = s
+        self._init_adjust_s_if_close_front()
         self.x, self.y = self.road.drive_along(self.s)
         # screen draw
         self.w, self.h = settings.convert_to_window(self.x, self.y)
         self.h += self.road.h_offset
         self.canvas = canvas
         self.sprite = self._init_sprite(self.canvas)
+
+    def _init_adjust_s_if_close_front(self):
+        vl, g = self._nearest_car_vl_g()
+        if g < settings.min_gap:
+            self.s = self.s - settings.min_gap
 
     def __lt__(self, other):
         return self.s < other.s
