@@ -59,7 +59,7 @@ class Map:
         self.net = None
         self.patch_list = None
         self.turtle_set = set()
-        self.ODN = profile.ODN
+        self.ODN = profile.get_ODN(total_ticks)
 
     def node(self, x, y):
         n = len(self.node_list)
@@ -82,12 +82,12 @@ class Map:
     def demand(self):
         if global_t < len(self.ODN) and self.ODN[global_t] != None:
             print("demand", self.ODN[global_t])
-            i_O, i_D, N = self.ODN[global_t]
-            O = self.node_list[i_O]
-            D = self.node_list[i_D]
-            for _ in range(N):
-                res = agents.Vehicle(self.canvas, self.net, O, D)
-                self.turtle_set.add(res)
+            for i_O, i_D, N in self.ODN[global_t]:
+                O = self.node_list[i_O]
+                D = self.node_list[i_D]
+                for _ in range(N):
+                    res = agents.Vehicle(self.canvas, self.net, O, D)
+                    self.turtle_set.add(res)
 
     def prepare_model(self):
         self.prepare_patch_list()
@@ -101,15 +101,12 @@ class Map:
 
     def prepare_patch_list(self):
 
-        n0 = self.node(-50, 50)
-        n1 = self.node(0, 0)
-        n2 = self.node(200,200)
-        n3 = self.node(-50, -50)
-        n4 = self.node(400, 200)
+        n0 = self.node(-550, 50)
+        n1 = self.node(-500, 0)
+        n2 = self.node(-250,500)
+        n3 = self.node(0, 50)
 
         r0 = self.road(n0, n1, 0)
-        r1 = self.road(n2, n1, 0)
-        r2 = self.road(n1, n2, 1)
-        r3 = self.road(n3, n1, 0)
-        r4 = self.road(n2, n4, 0)
+        r1 = self.road(n1, n2, 0)
+        r2 = self.road(n2, n3, 0)
 
