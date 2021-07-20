@@ -8,9 +8,9 @@ import random
 class kksw:
     def __init__(self):
         # constant not 1 equals 1.5 meters
-        self.delta_x = 1.5
-        self.v_free = 25 
-        self.d = 5
+        self.delta_x = 1.5 #
+        self.v_free = 25 # 
+        self.d = 5 #
         self.p3 = 0.05
         self.p02 = 0.5
         self.p22 = 0.35

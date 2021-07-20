@@ -116,7 +116,7 @@ class Vehicle:
             self.front_vehicle = None
         vl, g = self._nearest_car_vl_g()
         self.a_next, self.v_next = self.kksw.update_a_v_vl_g_and_get_a_v(
-                self.a, self.v, vl, g)
+                self.a, self.v, vl, g) # 25 default
         if DEBUG:
             print("--debug--", self.t, self.tag, self.road, self.next_road, self.s,self.road.l, vl, g)
 
