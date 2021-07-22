@@ -29,12 +29,16 @@ sh = animation_window_height/world_height_m
 
 min_gap = 7.6 # the minimal gap between cars
 
-total_ticks = 600 # 600 = 10 min, 3600 = 1 hour
+total_ticks = 400 # 600 = 10 min, 3600 = 1 hour
 time_interval = 1 # 1 second per tick
 global_t = 0 # the global clock
 
 total_travel_time = []
 total_number_vehicle = 0
+
+def print_all():
+    at = sum(total_travel_time)/len(total_travel_time)
+    print(at)
 
 def convert_to_window(x, y):
     w = int(x*sw + tw)
@@ -68,8 +72,8 @@ class Map:
         self.node_list.append(res)
         return res
 
-    def road(self, start, end, lane):
-        res = patches.Road(self.canvas, start, end, lane)
+    def road(self, start, end, v_free=25, lane=0):
+        res = patches.Road(self.canvas, start, end, v_free, lane)
         self.road_list.append(res)
         return res
 
@@ -101,12 +105,12 @@ class Map:
 
     def prepare_patch_list(self):
 
-        n0 = self.node(-550, 50)
-        n1 = self.node(-500, 0)
-        n2 = self.node(-250,500)
-        n3 = self.node(0, 50)
+        n0 = self.node(-404, 55)
+        n1 = self.node(-354, 5)
+        n2 = self.node(-177, 182)
+        n3 = self.node(0, 5)
 
-        r0 = self.road(n0, n1, 0)
-        r1 = self.road(n1, n2, 0)
-        r2 = self.road(n2, n3, 0)
+        r0 = self.road(n0, n1)
+        r1 = self.road(n1, n2)
+        r2 = self.road(n2, n3)
 

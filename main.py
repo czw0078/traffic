@@ -37,11 +37,8 @@ class View:
             settings.global_t += 1
             self.canvas.after(settings.animation_refresh_milliseconds, self.run)
         else:
-            # print("ticks:", settings.global_t)
-            # print(",".join(map(str, settings.total_travel_time)))
+            settings.print_all()
 
-            at = sum(settings.total_travel_time)/len(settings.total_travel_time)
-            print(at)
 
 tk = tkinter.Tk()
 widget = View(tk)

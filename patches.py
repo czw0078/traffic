@@ -7,9 +7,9 @@ import settings
 DEBUG = False
 
 class Road:
-    def __init__(self, canvas, start, end, lane=0):
+    def __init__(self, canvas, start, end, v_free=25, lane=0):
         self.start, self.end, self.l = self._init_endpoint(start, end)
-        self.v_max = 25
+        self.v_free = v_free
         self.last_travel_time = None
         self.vehicle_queue = deque()
         # shape
@@ -39,7 +39,7 @@ class Road:
 
     def get_travel_time(self):
         if self.last_travel_time == None:
-            return self.l/self.v_max
+            return self.l/self.v_free
         else:
             return self.last_travel_time
 
