@@ -60,7 +60,7 @@ def prepare_patch_list(obj):
     r7 = obj.road(n7, n8)
     r8 = obj.road(n8, n5)
 
-    r9 = obj.road(n3, n7)
+    # r9 = obj.road(n3, n7)
 
 
 
