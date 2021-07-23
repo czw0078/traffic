@@ -2,6 +2,10 @@
 
 import tkinter
 import settings
+import profile
+
+import random
+random.seed(profile.random_seed)
 
 class View:
     def __init__(self, root):
@@ -20,6 +24,7 @@ class View:
 
             for each in self.patch_list:
                 each.rule()
+            # debug later
             for each in list(self.turtle_set):
                 if each.finished:
                     self.turtle_set.remove(each)
